@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Football Match Predictor — AI-Powered Forecasting</title>
+  <meta name="description" content="Data-driven football match outcome prediction using a multi-task BiLSTM neural network. Predicts Home Win, Draw, or Away Win with calibrated probabilities." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ─── Background decorations ─── -->
+  <div class="bg-glow bg-glow--1"></div>
+  <div class="bg-glow bg-glow--2"></div>
+
+  <!-- ─── Header ─── -->
+  <header class="header">
+    <div class="header__logo">
+      <span class="header__icon">⚽</span>
+      <h1 class="header__title">Football Predictor</h1>
+    </div>
+    <p class="header__subtitle">AI-powered match outcome forecasting using BiLSTM + Attention</p>
+  </header>
+
+  <!-- ─── Main Card ─── -->
+  <main class="main">
+    <section class="match-card" id="match-card">
+      <div class="match-card__teams">
+
+        <!-- Home Team -->
+        <div class="team-picker" id="home-picker">
+          <label class="team-picker__label" for="home-input">Home Team</label>
+          <div class="team-picker__input-wrap">
+            <input
+              type="text"
+              id="home-input"
+              class="team-picker__input"
+              placeholder="Search team…"
+              autocomplete="off"
+            />
+            <ul class="team-picker__dropdown" id="home-dropdown"></ul>
+          </div>
+          <span class="team-picker__badge" id="home-badge">—</span>
+        </div>
+
+        <!-- VS divider -->
+        <div class="match-card__vs">
+          <span>VS</span>
+        </div>
+
+        <!-- Away Team -->
+        <div class="team-picker" id="away-picker">
+          <label class="team-picker__label" for="away-input">Away Team</label>
+          <div class="team-picker__input-wrap">
+            <input
+              type="text"
+              id="away-input"
+              class="team-picker__input"
+              placeholder="Search team…"
+              autocomplete="off"
+            />
+            <ul class="team-picker__dropdown" id="away-dropdown"></ul>
+          </div>
+          <span class="team-picker__badge" id="away-badge">—</span>
+        </div>
+      </div>
+
+      <!-- Date picker -->
+      <div class="date-row">
+        <label class="date-row__label" for="match-date">Match Date</label>
+        <input type="date" id="match-date" class="date-row__input" />
+      </div>
+
+      <!-- Predict button -->
+      <button class="btn-predict" id="btn-predict" disabled>
+        <span class="btn-predict__text">Predict Match</span>
+        <span class="btn-predict__loader" id="btn-loader"></span>
+      </button>
+
+      <!-- Error display -->
+      <p class="error-msg" id="error-msg"></p>
+    </section>
+
+    <!-- ─── Results Section (hidden until prediction) ─── -->
+    <section class="results" id="results" hidden>
+
+      <!-- Outcome probabilities -->
+      <div class="result-block outcome-block" id="outcome-block">
+        <h2 class="result-block__title">Match Outcome Probabilities</h2>
+        <div class="outcome-bars">
+          <div class="outcome-bar outcome-bar--home">
+            <span class="outcome-bar__label">Home Win</span>
+            <div class="outcome-bar__track">
+              <div class="outcome-bar__fill" id="bar-home"></div>
+            </div>
+            <span class="outcome-bar__pct" id="pct-home">0%</span>
+          </div>
+          <div class="outcome-bar outcome-bar--draw">
+            <span class="outcome-bar__label">Draw</span>
+            <div class="outcome-bar__track">
+              <div class="outcome-bar__fill" id="bar-draw"></div>
+            </div>
+            <span class="outcome-bar__pct" id="pct-draw">0%</span>
+          </div>
+          <div class="outcome-bar outcome-bar--away">
+            <span class="outcome-bar__label">Away Win</span>
+            <div class="outcome-bar__track">
+              <div class="outcome-bar__fill" id="bar-away"></div>
+            </div>
+            <span class="outcome-bar__pct" id="pct-away">0%</span>
+          </div>
+        </div>
+        <p class="outcome-verdict" id="outcome-verdict"></p>
+      </div>
+
+      <!-- Score prediction -->
+      <div class="result-block score-block" id="score-block">
+        <h2 class="result-block__title">Predicted Score</h2>
+        <div class="score-display">
+          <div class="score-display__team">
+            <span class="score-display__name" id="score-home-name"></span>
+            <span class="score-display__num" id="score-home-val">0</span>
+            <span class="score-display__raw" id="score-home-raw"></span>
+          </div>
+          <span class="score-display__dash">–</span>
+          <div class="score-display__team">
+            <span class="score-display__name" id="score-away-name"></span>
+            <span class="score-display__num" id="score-away-val">0</span>
+            <span class="score-display__raw" id="score-away-raw"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Predicted stats -->
+      <div class="result-block stats-block" id="stats-block">
+        <h2 class="result-block__title">Predicted Match Statistics</h2>
+        <table class="stats-table" id="stats-table">
+          <thead>
+            <tr>
+              <th id="stats-home-header">Home</th>
+              <th>Stat</th>
+              <th id="stats-away-header">Away</th>
+            </tr>
+          </thead>
+          <tbody id="stats-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Recent form tables -->
+      <div class="result-block form-block" id="form-block">
+        <h2 class="result-block__title">Recent Form</h2>
+        <div class="form-tables">
+          <div class="form-table-wrap">
+            <h3 class="form-table-wrap__team" id="form-home-name"></h3>
+            <table class="form-table" id="form-home-table">
+              <thead>
+                <tr><th>Date</th><th>Opponent</th><th>GF</th><th>GA</th><th>Res</th></tr>
+              </thead>
+              <tbody id="form-home-tbody"></tbody>
+            </table>
+          </div>
+          <div class="form-table-wrap">
+            <h3 class="form-table-wrap__team" id="form-away-name"></h3>
+            <table class="form-table" id="form-away-table">
+              <thead>
+                <tr><th>Date</th><th>Opponent</th><th>GF</th><th>GA</th><th>Res</th></tr>
+              </thead>
+              <tbody id="form-away-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ─── Footer ─── -->
+  <footer class="footer">
+    <p>Data-Driven Football Forecasting &middot; AI Mini Project &middot; BiLSTM + Temporal Attention Multi-Task Network</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
