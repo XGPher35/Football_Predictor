@@ -1,0 +1,14 @@
+README.md
+pyproject.toml
+neural_network_notebooks.egg-info/PKG-INFO
+neural_network_notebooks.egg-info/SOURCES.txt
+neural_network_notebooks.egg-info/dependency_links.txt
+neural_network_notebooks.egg-info/requires.txt
+neural_network_notebooks.egg-info/top_level.txt
+nn_football/__init__.py
+nn_football/data.py
+nn_football/eval.py
+nn_football/model.py
+nn_football/predict.py
+nn_football/preprocess.py
+nn_football/train.py
