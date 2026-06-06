@@ -19,7 +19,7 @@ python -m nn_football.train --epochs 5 --save_dir artifacts
 Prompt UI (interactive match selection with simple autocomplete):
 
 ```bash
-python ui_prompt.py --ckpt_path artifacts/model_best.pt --scaler_path artifacts/scaler.pkl
+python ui_prompt.py --ckpt_path artifacts/model_best.pt --scaler_path artifacts/scalers.pkl
 ```
 
 ## Dataset download
